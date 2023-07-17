@@ -321,12 +321,14 @@ namespace EldenwarfareHelper
                 {
                     File.Delete(System.IO.Path.Combine(gamePath, "dinput8.dll"));
                     File.Delete(System.IO.Path.Combine(gamePath, "mod_loader_config.ini")) ;
-                    Directory.Delete(System.IO.Path.Combine(gamePath, "mod", "EldenWarfare"));
+                    File.Delete(System.IO.Path.Combine(gamePath, "mods", "EldenWarfare.dll"));
+                    File.Delete(System.IO.Path.Combine(gamePath, "mods", "EldenWarfare.ini"));
+                    Directory.Delete(System.IO.Path.Combine(gamePath, "mods", "EldenWarfare"), true);
                     _installed = false;
                 }
                 else
                 {
-                    ZipFile.ExtractToDirectory(_zipPath, gamePath);
+                    ZipFile.ExtractToDirectory(_zipPath, gamePath, true);
                     _installed = true;
                 }
             }
