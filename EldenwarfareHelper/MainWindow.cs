@@ -53,7 +53,9 @@ namespace EldenwarfareHelper
             _downloaded = File.Exists(_zipPath);
             string gamePath;
             if (tryGetGamePath(out gamePath)) {
-                _modDeactivated = File.Exists(System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated"));
+                _modDeactivated = File.Exists(System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated")) ||
+                    (!File.Exists(System.IO.Path.Combine(gamePath, "dinput8.dll")) &&
+                    !File.Exists(System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated")));
 
                 _installed = (File.Exists(System.IO.Path.Combine(gamePath, "dinput8.dll")) ||
                         File.Exists(System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated"))) &&
@@ -314,12 +316,19 @@ namespace EldenwarfareHelper
 
         private void copyToGameDirectory()
         {
+
             string gamePath;
             if (tryGetGamePath(out gamePath))
             {
                 if (_installed)
                 {
-                    File.Delete(System.IO.Path.Combine(gamePath, "dinput8.dll"));
+                    var activatedPath = System.IO.Path.Combine(gamePath, "dinput8.dll");
+                    var deactivatedPath = System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated");
+
+                    if (File.Exists(activatedPath))     File.Delete(activatedPath);
+                    if (File.Exists(deactivatedPath))   File.Delete(deactivatedPath);
+
+                    File.Delete(System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated"));
                     File.Delete(System.IO.Path.Combine(gamePath, "mod_loader_config.ini")) ;
                     File.Delete(System.IO.Path.Combine(gamePath, "mods", "EldenWarfare.dll"));
                     File.Delete(System.IO.Path.Combine(gamePath, "mods", "EldenWarfare.ini"));
@@ -328,6 +337,7 @@ namespace EldenwarfareHelper
                 }
                 else
                 {
+                    if (!File.Exists(_zipPath)) return;
                     ZipFile.ExtractToDirectory(_zipPath, gamePath, true);
                     _installed = true;
                 }
@@ -338,21 +348,26 @@ namespace EldenwarfareHelper
             string gamePath;
             if (tryGetGamePath(out gamePath))
             {
+                var activatedPath = System.IO.Path.Combine(gamePath, "dinput8.dll");
+                var deactivatedPath = System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated");
+
+                if (!File.Exists(activatedPath) && !File.Exists(deactivatedPath))
+                {
+                    _modDeactivated = true;
+                    return false;
+                }
+
                 if (_modDeactivated)
                 {
-                    var filePath = System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated");
-                    if (!File.Exists(filePath)) return true;
-                    var newFilePath = System.IO.Path.Combine(gamePath, "dinput8.dll");
-                    File.Move(filePath, newFilePath);
-                    _modDeactivated = false;
+                    if (File.Exists(activatedPath)) { _modDeactivated = false; return true; }
+                    File.Move(deactivatedPath, activatedPath);
+                    _modDeactivated = true;
                 }
                 else
                 {
-                    var filePath = System.IO.Path.Combine(gamePath, "dinput8.dll");
-                    if (!File.Exists(filePath)) return false;
-                    var newFilePath = System.IO.Path.Combine(gamePath, "dinput8.dll.deactivated");
-                    File.Move(filePath, newFilePath);
-                    _modDeactivated = true;
+                    if (File.Exists(deactivatedPath)) { _modDeactivated = true; return false; }
+                    File.Move(activatedPath, deactivatedPath);
+                    _modDeactivated = false;
                     return false;
                 }
             }
