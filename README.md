@@ -1,3 +1,4 @@
+# THIS RELEASE IS FOR TESTING. BUGS CAN HAPPEN!
 
 # If the helper hangs up
 1. Go into game folder
